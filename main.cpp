@@ -1,17 +1,12 @@
 #include "cVision.hpp"
-#include "lib/image/image.h"
-#include "lib/image/stb_image.h"
-
+#include "lib/image/image.h"    
 
 int main(int argc, char const *argv[])
 {
-    int width, height, channels;
-    stbi_set_flip_vertically_on_load(true);
-    unsigned char *image = stbi_load("path_to_raster_image.jpg",
-                                    &width,
-                                    &height,
-                                    &channels,
-                                    STBI_rgb);
-    stbi_image_free(image);
+    Image *myImg = new_image();
+    load_image(myImg, "samples/bpack0.png");
+    save_image(myImg, "test.png");
+    free_image(myImg);
+    free(myImg);
     return 0;
 }

@@ -13,6 +13,14 @@
 #include "image.h"
 #include <cstdlib>
 
+//STB  
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image_write.h"
+
+
+// create a new image object
 Image *new_image()
 {
     Image *img = (Image *)malloc(sizeof(Image));
@@ -21,26 +29,77 @@ Image *new_image()
 
 void load_image(Image *img, const char *fname)
 {
-    stbi_set_flip_vertically_on_load(true);
     img->data = stbi_load(fname,
                         &(img->width),
                         &(img->height),
-                        &(img->channels),
+                        &(img->nchannels),
                         STBI_rgb);
     img->allocation_ = STB_ALLOCATED;
+    img->size = img->width * img->height * img->nchannels;
 }
 
 void free_image(Image *img)
 {
-    if (img->allocation_ == STB_ALLOCATED)
+    if (img->allocation_ != NO_ALLOCATION && img != NULL && img->data != NULL)
     {
-        stbi_image_free(img->data);
+        if (img->allocation_ == STB_ALLOCATED)
+        {
+            stbi_image_free(img->data);
+        }
+        else if (img->allocation_ == SELF_ALLOCATED)
+        {
+            free(img->data);
+        }
+        img->height = 0;
+        img->width = 0;
+        img->nchannels = 0;
+        img->size = 0;
+        img->allocation_ = NO_ALLOCATION;
     }
 }
 
+void create_image(Image *img, int width, int height, int nchannels, bool zeroed)
+{
+    if (img == NULL)
+    {
+        img = new_image();
+    }
+    if (img->data != NULL)
+    {
+        free_image(img);
+    }
+    size_t size = width * height * nchannels;
+    if (zeroed)
+    {
+        img->data = (uchar *)calloc(size, sizeof(uchar));
+    }
+    else
+    {
+        img->data = (uchar *)malloc(size * sizeof(uchar));
+    }
+    img->allocation_ = SELF_ALLOCATED;
+    img->width = width;
+    img->height = height;
+    img->nchannels = nchannels;
+    img->size = size;
+}
 
-
-
+// save the image to the extension fname
+void save_image(const Image *img, const char *fname)
+{
+    if (str_end_with(fname, ".jpg") || str_end_with(fname, ".JPG") || str_end_with(fname, ".jpeg") || str_end_with(fname, ".JPEG"))
+    {
+        stbi_write_jpg(fname, img->width, img->height, img->nchannels, img->data, 100);
+    } 
+    else if (str_end_with(fname, ".png") || str_end_with(fname, ".PNG"))
+    {
+        stbi_write_png(fname, img->width, img->height, img->nchannels, img->data, img->width * img->nchannels);
+    }
+    else
+    {
+        ASSERT_EXIT(false, "wrong/no provided extension!");
+    }
+}
 
 
 

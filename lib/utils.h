@@ -1,4 +1,5 @@
-#pragma once
+#ifndef UTILS_H
+#define UTILS_H
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -6,16 +7,16 @@
 #include <string.h>
 
 // error utility macro
-#define ON_ERROR_EXIT(cond, message) \
+#define ASSERT_EXIT(cond, message) \
 do { \
-    if((cond)) { \
+    if((!cond)) { \
         printf("error at: %s, line: %d\n", __func__, __LINE__); \
         perror((message)); \
         exit(1); \
     } \
 } while (0)
 
-static inline bool str_end_in(const char *str, const char *suffix)
+static inline bool str_end_with(const char *str, const char *suffix)
 {
     if (!str || !suffix)
         return 0;
@@ -25,3 +26,5 @@ static inline bool str_end_in(const char *str, const char *suffix)
         return 0;
     return strncmp(str + lenstr - lensuffix, suffix, lensuffix) == 0;
 }
+
+#endif

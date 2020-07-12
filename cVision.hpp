@@ -20,7 +20,5 @@
 #include <fstream>
 using namespace std;
 
-typedef unsigned char uchar;
-typedef uchar *Img;
 
 #endif

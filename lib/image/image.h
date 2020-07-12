@@ -18,9 +18,12 @@
 #include <vector>
 #include <iostream>
 #include "stb_image.h"
+#include "stb_image_write.h"
+#include "../utils.h"
 
 using namespace std;
 
+typedef unsigned char uchar;
 
 enum allocation_type {
     NO_ALLOCATION, SELF_ALLOCATED, STB_ALLOCATED
@@ -29,22 +32,19 @@ enum allocation_type {
 typedef struct {
     int width;
     int height;
-    int channels;
+    int nchannels;
     size_t size;
-    uint8_t *data;
+    uchar *data;
     enum allocation_type allocation_;
 } Image;
 
 Image *new_image();
 void load_image(Image *img, const char *fname);
-void create_image(Image *img, int width, int height, int channels, bool zeroed);
+void create_image(Image *img, int width, int height, int nchannels, bool zeroed);
 void save_image(const Image *img, const char *fname);
 void free_image(Image *img);
-void ConvertRGB2GREY(const Image *orig, Image *gray);
-void ConvertIMG2SEPIA(const Image *orig, Image *sepia);
 
 // processing
-typedef unsigned char uchar;
 
 uchar *AllocateUcharImage(int width, int height, int nchannel);
 uchar GetPixel(uchar *im, int width, int height, int x, int y, int channel);
