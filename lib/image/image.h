@@ -44,6 +44,7 @@ void create_image(Image *img, int width, int height, int nchannels, bool zeroed)
 void save_image(const Image *img, const char *fname);
 void free_image(Image *img);
 
+
 // processing
 
 uchar *AllocateUcharImage(int width, int height, int nchannel);
@@ -54,7 +55,7 @@ void LabelImage(uchar *res, int width, int height, int** labels, int regCount);
 int range_distance(uchar* image, int width, int height, int x1, int y1, int x2, int y2 );
 uchar *ConvertRGB2LUV(uchar * input, int width, int height, int nchannel);
 uchar *ConvertLUV2RGB(uchar * origin, int width, int height, int nchannel);
-float color_distance( const float* a, const float* b);
+float color_distance(const float* a, const float* b);
 std::vector<int> GenerateRandomNumbers(int num);
 
 

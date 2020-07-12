@@ -20,24 +20,24 @@
 #include "stb_image_write.h"
 
 
-// create a new image object
+/* create image object which contains data*/
 Image *new_image()
 {
     Image *img = (Image *)malloc(sizeof(Image));
     return img;
 }
 
+/* load an image from extension to the image object*/
 void load_image(Image *img, const char *fname)
 {
-    img->data = stbi_load(fname,
-                        &(img->width),
-                        &(img->height),
-                        &(img->nchannels),
-                        STBI_rgb);
-    img->allocation_ = STB_ALLOCATED;
-    img->size = img->width * img->height * img->nchannels;
+    if((img->data = stbi_load(fname, &(img->width), &(img->height), &(img->nchannels), STBI_rgb)) != NULL)
+    {
+        img->size = img->width * img->height * img->nchannels;
+        img->allocation_ = STB_ALLOCATED;
+    }
 }
 
+/* free the memory allocations inside the image object*/
 void free_image(Image *img)
 {
     if (img->allocation_ != NO_ALLOCATION && img != NULL && img->data != NULL)
@@ -58,6 +58,7 @@ void free_image(Image *img)
     }
 }
 
+/* allocate an image array inside the image array */
 void create_image(Image *img, int width, int height, int nchannels, bool zeroed)
 {
     if (img == NULL)
@@ -104,7 +105,6 @@ void save_image(const Image *img, const char *fname)
 
 
 /**
- * @file image.cpp
  * @brief Image helper functions
  *
  * @author Damir Demirović <damir.demirovic@untz.ba>
@@ -176,7 +176,6 @@ void LabelImage(uchar *image, int width, int height, int** labels,int regCount)
             SetPixel(image, width, height, j, i, (uchar)((color[label]) & 255),1);
             SetPixel(image, width, height, j, i, (uchar)((color[label] >> 8) & 255),2);
             SetPixel(image, width, height, j, i, (uchar)((color[label] >> 16) & 255),3);
-
         }
     }
 }
@@ -342,12 +341,9 @@ uchar * ConvertRGB2LUV(uchar * rgb, int width, int height, int nchannel)
             int index_B = 2 * height * width + i * width + j;
 
             RGB2LUV(rgb[index_R], rgb[index_G], rgb[index_B], &luv[index_R], &luv[index_G], &luv[index_B]);
-
         }
     }
-
     return luv;
-
 }
 
 

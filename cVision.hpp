@@ -10,15 +10,11 @@
 #ifndef CVISION_H
 #define CVISION_H
 
-#include <iostream>
-#include <stdlib.h>
-#include <stdio.h>
-#include <cstdlib>
-#include <math.h>
-#include <limits.h>
-#include <sstream>
-#include <fstream>
-using namespace std;
 
+#include "lib/ms/ms.h"
+#include "lib/ra/RAList.h"
+#include "lib/ra/TransitiveClosure.h"
+
+typedef unsigned char *ImgData;
 
 #endif
