@@ -57,28 +57,31 @@ void AddToStack(std::stack<MSPoint> &stack, int i, int j)
 *  \return segmented image
 */
 
-uchar* MeanShift(uchar* image, uchar* filtered_luv, int **labels, int width, int height, int spatial_radius, double color_radius, int minRegion, int num_iters)
+Image *MeanShift(Image* img, Image* filtered, int** labels, int spatial_radius, double color_radius, int minRegion, int num_iters)
 {
     int regCount;
  
     // First phase of Meanshift filtering
     // filtered image is in L*u*v colorspace
         
-    uchar *filt;
-    filt = MS_Filter(image, width, height, spatial_radius, color_radius, num_iters);
+    Image *filt = new_image();
+    filt = MS_Filter(img, spatial_radius, color_radius, num_iters);
     
-    memcpy(filtered_luv, filt, height*width*3);
+    memcpy(filtered->data, filt->data, img->height*img->width*img->nchannels);
     
     // Second phase of Meanshift is segmentation
-    regCount = MS_Segment(filt, width, height, labels, color_radius, minRegion);
+    regCount = MS_Segment(filt, labels, color_radius, minRegion);
      
-    uchar *segmented = new uchar[height*width*3];
-    memcpy(segmented, filt, height*width*3);
+    Image *segmented = new_image();
+    create_image(segmented, img->width, img->height, img->nchannels, false);
+    
+    memcpy(segmented->data, filt->data, img->height * img->width * img->nchannels);
   
     // Label regions in the segmented image with labels
-    LabelImage(segmented, width, height, labels, regCount);
+    LabelImage(segmented, labels, regCount);
         
-    delete [] filt;
+    free_image(filt);
+    free(filt);
     return segmented;
 }
 
@@ -100,15 +103,16 @@ uchar* MeanShift(uchar* image, uchar* filtered_luv, int **labels, int width, int
 *  \param initIters initial number of iterations
 *  \return luv Meanshift filtered image in L*u*v colorspace.
 */
-uchar* MS_Filter(uchar* image, int width, int height, int spatial_radius, double color_radius, int initIters)
+Image *MS_Filter(Image* img, int h_spatial, double h_range, int initIters)
 {
-    double color_radius_squared = color_radius * color_radius;
+    double color_radius_squared = h_range * h_range;
+    int width = img->width;
+    int height = img->height;
 
     // Convert image to L*u*v colorspace
-    uchar * luv = ConvertRGB2LUV(image, width, height, 3);
+    Image *luv = convertRGB2LUV(img);
     // Initialize number of iterations
     int  num_iters=initIters;
-
     // traverse the image
     for(int j = 0; j < height; j++)
         for(int i = 0; i < width; i++)
@@ -119,9 +123,9 @@ uchar* MS_Filter(uchar* image, int width, int height, int spatial_radius, double
             // get the vector
             int ic = i;
             int jc = j;
-            float L = GetPixel(luv, width, height, i, j, 1);
-            float U = GetPixel(luv, width, height, i, j, 2);
-            float V = GetPixel(luv, width, height, i, j, 3);
+            float L = GetPixel(luv, i, j)[0];
+            float U = GetPixel(luv, i, j)[1];
+            float V = GetPixel(luv, i, j)[2];
 
             double ms_shift = 5; // initial value of mean shift
 
@@ -136,17 +140,17 @@ uchar* MS_Filter(uchar* image, int width, int height, int spatial_radius, double
                 int  num = 0;
 
                 // get the start and the end of the window
-                int ifrom = max(0, i - spatial_radius), ito = min(width, i + spatial_radius + 1);
-                int jfrom = max(0, j - spatial_radius), jto = min(height, j + spatial_radius + 1);
+                int ifrom = max(0, i - h_spatial), ito = min(width, i + h_spatial + 1);
+                int jfrom = max(0, j - h_spatial), jto = min(height, j + h_spatial + 1);
                 // traverse the window centered at (ci, cj) pixel of interest which is initially (i, j)
                 for (int jj = jfrom; jj < jto; jj++)
                 {
                     for (int ii = ifrom; ii < ito; ii++)
                     {
                         // get the second the values of the colours within the window
-                        float L2 = GetPixel(luv, width, height, ii, jj, 1);
-                        float U2 = GetPixel(luv, width, height, ii, jj, 2);
-                        float V2 = GetPixel(luv, width, height, ii, jj, 3);
+                        float L2 = GetPixel(luv, ii, jj)[0];
+                        float U2 = GetPixel(luv, ii, jj)[1];
+                        float V2 = GetPixel(luv, ii, jj)[2];
 
                         double dL = L2 - L;
                         double dU = U2 - U;
@@ -188,9 +192,9 @@ uchar* MS_Filter(uchar* image, int width, int height, int spatial_radius, double
                 ms_shift = di * di + dj * dj + dL * dL + dU * dU + dV * dV;
             }
             // Set pixel L, U and v values
-            SetPixel(luv, width, height, i, j, (uchar)L, 1); // L
-            SetPixel(luv, width, height, i, j, (uchar)U, 2); // u
-            SetPixel(luv, width, height, i, j, (uchar)V, 3); // v
+            SetPixel(luv, i, j, (uchar)L, 1); // L
+            SetPixel(luv, i, j, (uchar)U, 2); // u
+            SetPixel(luv, i, j, (uchar)V, 3); // v
         }
         
     return luv;
@@ -209,19 +213,19 @@ uchar* MS_Filter(uchar* image, int width, int height, int spatial_radius, double
 *  \param minRegion minimal region for merging
 *  \return regCount Number of segmented regions
 */
-int MS_Segment(uchar * image, int width, int height, int **labels, double color_radius, int minRegion)
+int MS_Segment(Image* img, int** labels, double h_range, int minRegion)
 {
     int regCount;
-    float* mode = new float[height * width * 3];
-    int* modePoints = new int[height * width];
+    float* mode = new float[img->height * img->width * 3];
+    int* modePoints = new int[img->height * img->width];
 
     // Initialize modePoints to zero
-    for (int i = 0; i < width * height; i++)
+    for (int i = 0; i < img->width * img->height; i++)
         modePoints[i] = 0;
     // Cluster image with  Mean shift
-    regCount = MS_Cluster(image, width, height, labels, modePoints, mode, color_radius);
+    regCount = MS_Cluster(img, labels, modePoints, mode, h_range);
     // Run transitive closure algorithm
-    TransitiveClosure(width, height, labels, modePoints, mode, color_radius, regCount, minRegion);
+    TransitiveClosure(img->width, img->height, labels, modePoints, mode, h_range, regCount, minRegion);
 
     // mode and modePoints deleted at the end of TransitiveClousure
     return regCount;
@@ -240,11 +244,13 @@ int MS_Segment(uchar * image, int width, int height, int **labels, double color_
 *  \param color_radius  range radius
 *  \return regCount number of regions
 */
-int MS_Cluster(uchar  *image, int width, int height, int **labels,int* modePoints, float *mode, double color_radius)
+int MS_Cluster(Image* img, int** labels, int* modePoints, float* mode, double h_range)
 {
+    int height = img->height;
+    int width = img->width;
     int regCount = 0;
     int lbl = -1;
-    double color_radius2 = color_radius * color_radius;
+    double color_radius2 = h_range * h_range;
 
     //  8-connected neighbors
     const int dxdy[8][2] = { {-1,-1} , {-1,0} , {-1,1} , {0,-1} , {0,1} , {1,-1} , {1,0} , {1,1} };
@@ -262,9 +268,9 @@ int MS_Cluster(uchar  *image, int width, int height, int **labels,int* modePoint
             {
                 labels[j][i] = ++lbl;
 
-                float L = GetPixel(image, width, height, i, j, 1);  // L
-                float U = GetPixel(image, width, height, i, j, 2);  // u
-                float V = GetPixel(image, width, height, i, j, 3);  // v
+                float L = GetPixel(img, i, j)[0];  // L
+                float U = GetPixel(img, i, j)[1];  // u
+                float V = GetPixel(img, i, j)[2];  // v
 
                 // Convert 8-bit data to L*u*v range 0<=l<=100, −134<=u<=220, −140<=v<=122
                 mode[lbl * 3 + 0] = 100 * L / 255;
@@ -284,21 +290,20 @@ int MS_Cluster(uchar  *image, int width, int height, int **labels,int* modePoint
                         int ii = point.x + dxdy[k][0];
                         int jj = point.y + dxdy[k][1];
 
-                        if(ii >= 0 && jj >= 0 && jj < height && ii < width && labels[jj][ii] < 0 && range_distance(image,width, height,i,j,ii,jj) < color_radius2)
+                        if(ii >= 0 && jj >= 0 && jj < height && ii < width && labels[jj][ii] < 0 && range_distance(img,i,j,ii,jj) < color_radius2)
                         {
                             labels[jj][ii] = lbl;
                             AddToStack(stack, ii,  jj);
                             modePoints[lbl]++;
 
-                            float L = GetPixel(image, width, height, ii, jj, 1);  // L
-                            float U = GetPixel(image, width, height, ii, jj, 2);  // u
-                            float V = GetPixel(image, width, height, ii, jj, 3);  // v
+                            float L = GetPixel(img, ii, jj)[0];  // L
+                            float U = GetPixel(img, ii, jj)[1];  // u
+                            float V = GetPixel(img, ii, jj)[2];  // v
 
                             // Convert 8-bit data to L*u*v range 0<=l<=100, −134<=u<=220, −140<=v<=122
                             mode[lbl * 3 + 0] += 100 * L / 255;
                             mode[lbl * 3 + 1] += 354 * U / 255 - 134;
                             mode[lbl * 3 + 2] += 256 * V / 255 - 140;
-
                         }
                     }
                 }

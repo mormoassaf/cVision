@@ -102,26 +102,7 @@ void save_image(const Image *img, const char *fname)
     }
 }
 
-
-
-/**
- * @brief Image helper functions
- *
- * @author Damir Demirović <damir.demirovic@untz.ba>
- */
-
-/*! \brief Allocate space for the uchar image,
-*
-*
-*  \param width, height and nchannel
-*  \return img - allocated image
-*/
-uchar * AllocateUcharImage(int width, int height, int nchannel)
-{
-    // Allocate and initialize to zero
-    uchar * img = new uchar[ width * height * nchannel]();
-    return img;
-}
+//==============================================================================================================================================
 
 
 /*! \brief Generate labels for clustering.
@@ -138,7 +119,6 @@ int** GenerateLabels(size_t width,size_t height)
         labels[i] = new int [width];
     return labels;
 }
-
 
 /*! \brief Function generate random numbers
 *
@@ -164,18 +144,18 @@ vector<int> GenerateRandomNumbers(int count)
 *  \param labels color labels
 *  \param regCount regions to be labeled
 */
-void LabelImage(uchar *image, int width, int height, int** labels,int regCount)
+void LabelImage(Image* img, int** labels,int regCount)
 {
     vector<int> color = GenerateRandomNumbers(regCount);
 
-    for(int i = 0; i < height; i++)
+    for(int i = 0; i < img->height; i++)
     {
-        for(int j = 0; j < width; j++)
+        for(int j = 0; j < img->width; j++)
         {
             int label = labels[i][j];
-            SetPixel(image, width, height, j, i, (uchar)((color[label]) & 255),1);
-            SetPixel(image, width, height, j, i, (uchar)((color[label] >> 8) & 255),2);
-            SetPixel(image, width, height, j, i, (uchar)((color[label] >> 16) & 255),3);
+            SetPixel(img, j, i, (uchar)((color[label]) & 255),1);
+            SetPixel(img, j, i, (uchar)((color[label] >> 8) & 255),2);
+            SetPixel(img, j, i, (uchar)((color[label] >> 16) & 255),3);
         }
     }
 }
@@ -328,19 +308,15 @@ inline void LUV2RGB(float L, float u, float v, uchar *R, uchar *G, uchar *B)
 *  \param nchannel number of image channels
 *  \return luv the converted image
 */
-uchar * ConvertRGB2LUV(uchar * rgb, int width, int height, int nchannel)
+Image *convertRGB2LUV(Image* input)
 {
-    uchar *luv = AllocateUcharImage(width,height,nchannel);
-
-    for(int i = 0; i < height; i++)
+    Image *luv = new_image();
+    create_image(luv, input->width, input->height, input->nchannels, false);
+    for(int i = 0; i < input->width; i++)
     {
-        for(int j = 0; j < width; j++)
+        for(int j = 0; j < input->height; j++)
         {
-            int index_R = i * width + j;
-            int index_G = height * width + i * width + j;
-            int index_B = 2 * height * width + i * width + j;
-
-            RGB2LUV(rgb[index_R], rgb[index_G], rgb[index_B], &luv[index_R], &luv[index_G], &luv[index_B]);
+            RGB2LUV(GetPixel(input, i, j)[0], GetPixel(input, i, j)[1], GetPixel(input, i, j)[2], &GetPixel(luv, i, j)[0], &GetPixel(luv, i, j)[1], &GetPixel(luv, i, j)[2]);
         }
     }
     return luv;
@@ -355,23 +331,18 @@ uchar * ConvertRGB2LUV(uchar * rgb, int width, int height, int nchannel)
 *  \param nchannel number of image channels
 *  \return The input character
 */
-uchar * ConvertLUV2RGB(uchar * luv, int width, int height, int nchannel)
+Image *convertLUV2RGB(Image* origin)
 {
-    uchar *rgb = AllocateUcharImage(width, height, nchannel);
-
-    for(int i = 0; i < height; i++)
+    Image *rgb = new_image();
+    create_image(rgb, origin->width, origin->height, origin->nchannels, false);
+    for(int i = 0; i < origin->width; i++)
     {
-        for(int j = 0; j < width; j++)
+        for(int j = 0; j < origin->height; j++)
         {
-            int index_L = i * width + j;
-            int index_U = height * width + i * width + j;
-            int index_V = 2  * height * width + i * width + j;
-
-            LUV2RGB(luv[index_L], luv[index_U], luv[index_V], &rgb[index_L], &rgb[index_U], &rgb[index_V]);
+            LUV2RGB(GetPixel(origin, i, j)[0], GetPixel(origin, i, j)[1], GetPixel(origin, i, j)[2], &GetPixel(rgb, i, j)[0], &GetPixel(rgb, i, j)[1], &GetPixel(rgb, i, j)[2]);
         }
     }
     return rgb;
-
 }
 
 /*! \brief Set Pixel at channel component of image at postition given with x and y
@@ -384,9 +355,10 @@ uchar * ConvertLUV2RGB(uchar * luv, int width, int height, int nchannel)
 *  \param val value to set at pixel location
 *  \param nchannel number of image channels
 */
-void SetPixel(uchar *im, int width, int height, int x, int y, const uchar val, int nchannel)
+void SetPixel(Image *img, int x, int y, const uchar val, int nchannel)
 {
-    *(im + (nchannel - 1) * height * width + y * width + x) = val;
+    uchar* offset = img->data + (x + y * img->width) * (sizeof(uchar) * img->nchannels);
+    offset[nchannel - 1] = val;
 }
 
 /*! \brief Get Pixel at channel component of image at postition given with x and y
@@ -398,9 +370,10 @@ void SetPixel(uchar *im, int width, int height, int x, int y, const uchar val, i
 *  \param nchannel number of image channels
 *  \return pixel value
 */
-uchar GetPixel(uchar *im, int width, int height, int x, int y, int nchannel)
+uchar *GetPixel(Image *img, int x, int y)
 {
-    return *(im + (nchannel - 1) * height * width + y * width + x);
+    uchar* offset = img->data + (x + y * img->width) * (sizeof(uchar) * img->nchannels);
+    return offset;
 }
 
 /*! \brief Function range_distance calculate range distance between two pixels
@@ -413,11 +386,11 @@ uchar GetPixel(uchar *im, int width, int height, int x, int y, int nchannel)
 *  \param y2 second y position in the image
 *  \return squared sum of distances
 */
-int range_distance(uchar* image, int width, int height, int x1, int y1, int x2, int y2 )
+int range_distance(Image *img, int x1, int y1, int x2, int y2 )
 {
-    int r = GetPixel(image, width, height, x1, y1, 1) - GetPixel(image, width, height, x2, y2, 1);
-    int g = GetPixel(image, width, height, x1, y1, 2) - GetPixel(image, width, height, x2, y2, 2);
-    int b = GetPixel(image, width, height, x1, y1, 3) - GetPixel(image, width, height, x2, y2, 3);
+    int r = GetPixel(img, x1, y1)[0] - GetPixel(img, x2, y2)[0];
+    int g = GetPixel(img, x1, y1)[1] - GetPixel(img, x2, y2)[1];
+    int b = GetPixel(img, x1, y1)[2] - GetPixel(img, x2, y2)[2];
 
     return r * r + g * g + b * b;
 }

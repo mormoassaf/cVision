@@ -29,10 +29,10 @@ struct MSPoint
     int y;
 };
 
-uchar* MeanShift(uchar* image, uchar *filtered, int **labels, int width, int height, int spatial_radius, double color_radius, int minRegion, int num_iters);
-uchar* MS_Filter(uchar* image, int width, int height, int h_spatial, double h_range, int initIters);
-int MS_Segment(uchar * image, int width, int height, int **labels, double h_range, int minRegion);
-int MS_Cluster(uchar  *image, int width, int height, int **labels,int* modePoints, float *mode, double h_range);
+Image *MeanShift(Image *img, Image *filtered, int **labels, int spatial_radius, double color_radius, int minRegion, int num_iters);
+Image *MS_Filter(Image *img, int h_spatial, double h_range, int initIters);
+int MS_Segment(Image *img, int **labels, double h_range, int minRegion);
+int MS_Cluster(Image *img, int **labels,int* modePoints, float *mode, double h_range);
 
 
 #endif /* MEANSHIFT_H */
