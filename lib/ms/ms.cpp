@@ -108,6 +108,8 @@ Image *MS_Filter(Image* img, int h_spatial, double h_range, int initIters)
     double color_radius_squared = h_range * h_range;
     int width = img->width;
     int height = img->height;
+    Image* result = new_image();
+    create_image(result, img->width, img->height, img->nchannels, false);
 
     // Convert image to L*u*v colorspace
     Image *luv = convertRGB2LUV(img);
@@ -192,12 +194,13 @@ Image *MS_Filter(Image* img, int h_spatial, double h_range, int initIters)
                 ms_shift = di * di + dj * dj + dL * dL + dU * dU + dV * dV;
             }
             // Set pixel L, U and v values
-            SetPixel(luv, i, j, (uchar)L, 1); // L
-            SetPixel(luv, i, j, (uchar)U, 2); // u
-            SetPixel(luv, i, j, (uchar)V, 3); // v
+            SetPixel(result, i, j, (uchar)L, 1); // L
+            SetPixel(result, i, j, (uchar)U, 2); // u
+            SetPixel(result, i, j, (uchar)V, 3); // v
         }
-        
-    return luv;
+    free_image(luv);
+    free(luv);
+    return result;
 }
 
 
