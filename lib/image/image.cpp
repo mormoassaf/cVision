@@ -24,6 +24,13 @@
 Image *new_image()
 {
     Image *img = (Image *)malloc(sizeof(Image));
+    ASSERT_EXIT((img != NULL), "Assertion failed: allocation for Image object failed!");
+    img->width = 0;
+    img->height = 0;
+    img->allocation_ = NO_ALLOCATION;
+    img->size = 0;
+    img->nchannels = 0;
+    img->data = NULL;
     return img;
 }
 
@@ -111,7 +118,7 @@ void save_image(const Image *img, const char *fname)
 *  \param width, height
 *  \return labels
 */
-int** GenerateLabels(size_t width,size_t height)
+int** generate_labels(size_t width,size_t height)
 {
     int **labels = new int *[height];
 
@@ -126,7 +133,7 @@ int** GenerateLabels(size_t width,size_t height)
 *  \param count - Count of numbers to be generated
 *  \return number as vector<int>
 */
-vector<int> GenerateRandomNumbers(int count)
+vector<int> get_random_numbers(int count)
 {
     vector<int> number(count);
 
@@ -136,7 +143,7 @@ vector<int> GenerateRandomNumbers(int count)
     return number;
 }
 
-/*! \brief Function LabelImage in RGB colors
+/*! \brief Function label_image in RGB colors
 *
 *  \param image image to be labeled
 *  \param width width of the image
@@ -144,18 +151,18 @@ vector<int> GenerateRandomNumbers(int count)
 *  \param labels color labels
 *  \param regCount regions to be labeled
 */
-void LabelImage(Image* img, int** labels,int regCount)
+void label_image(Image* img, int** labels,int regCount)
 {
-    vector<int> color = GenerateRandomNumbers(regCount);
+    vector<int> color = get_random_numbers(regCount);
 
     for(int i = 0; i < img->height; i++)
     {
         for(int j = 0; j < img->width; j++)
         {
             int label = labels[i][j];
-            SetPixel(img, j, i, (uchar)((color[label]) & 255),1);
-            SetPixel(img, j, i, (uchar)((color[label] >> 8) & 255),2);
-            SetPixel(img, j, i, (uchar)((color[label] >> 16) & 255),3);
+            set_pixel(img, j, i, (uchar)((color[label]) & 255),1);
+            set_pixel(img, j, i, (uchar)((color[label] >> 8) & 255),2);
+            set_pixel(img, j, i, (uchar)((color[label] >> 16) & 255),3);
         }
     }
 }
@@ -316,7 +323,7 @@ Image *convertRGB2LUV(Image* input)
     {
         for(int j = 0; j < input->height; j++)
         {
-            RGB2LUV(GetPixel(input, i, j)[0], GetPixel(input, i, j)[1], GetPixel(input, i, j)[2], &GetPixel(luv, i, j)[0], &GetPixel(luv, i, j)[1], &GetPixel(luv, i, j)[2]);
+            RGB2LUV(get_pixel(input, i, j)[0], get_pixel(input, i, j)[1], get_pixel(input, i, j)[2], &get_pixel(luv, i, j)[0], &get_pixel(luv, i, j)[1], &get_pixel(luv, i, j)[2]);
         }
     }
     return luv;
@@ -339,7 +346,7 @@ Image *convertLUV2RGB(Image* origin)
     {
         for(int j = 0; j < origin->height; j++)
         {
-            LUV2RGB(GetPixel(origin, i, j)[0], GetPixel(origin, i, j)[1], GetPixel(origin, i, j)[2], &GetPixel(rgb, i, j)[0], &GetPixel(rgb, i, j)[1], &GetPixel(rgb, i, j)[2]);
+            LUV2RGB(get_pixel(origin, i, j)[0], get_pixel(origin, i, j)[1], get_pixel(origin, i, j)[2], &get_pixel(rgb, i, j)[0], &get_pixel(rgb, i, j)[1], &get_pixel(rgb, i, j)[2]);
         }
     }
     return rgb;
@@ -355,7 +362,7 @@ Image *convertLUV2RGB(Image* origin)
 *  \param val value to set at pixel location
 *  \param nchannel number of image channels
 */
-void SetPixel(Image *img, int x, int y, const uchar val, int nchannel)
+void set_pixel(Image *img, int x, int y, const uchar val, int nchannel)
 {
     uchar* offset = img->data + (x + y * img->width) * (sizeof(uchar) * img->nchannels);
     offset[nchannel - 1] = val;
@@ -370,7 +377,7 @@ void SetPixel(Image *img, int x, int y, const uchar val, int nchannel)
 *  \param nchannel number of image channels
 *  \return pixel value
 */
-uchar *GetPixel(Image *img, int x, int y)
+uchar *get_pixel(Image *img, int x, int y)
 {
     uchar* offset = img->data + (x + y * img->width) * (sizeof(uchar) * img->nchannels);
     return offset;
@@ -388,9 +395,9 @@ uchar *GetPixel(Image *img, int x, int y)
 */
 int range_distance(Image *img, int x1, int y1, int x2, int y2 )
 {
-    int r = GetPixel(img, x1, y1)[0] - GetPixel(img, x2, y2)[0];
-    int g = GetPixel(img, x1, y1)[1] - GetPixel(img, x2, y2)[1];
-    int b = GetPixel(img, x1, y1)[2] - GetPixel(img, x2, y2)[2];
+    int r = get_pixel(img, x1, y1)[0] - get_pixel(img, x2, y2)[0];
+    int g = get_pixel(img, x1, y1)[1] - get_pixel(img, x2, y2)[1];
+    int b = get_pixel(img, x1, y1)[2] - get_pixel(img, x2, y2)[2];
 
     return r * r + g * g + b * b;
 }

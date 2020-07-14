@@ -78,7 +78,7 @@ Image *MeanShift(Image* img, Image* filtered, int** labels, int spatial_radius, 
     memcpy(segmented->data, filt->data, img->height * img->width * img->nchannels);
   
     // Label regions in the segmented image with labels
-    LabelImage(segmented, labels, regCount);
+    label_image(segmented, labels, regCount);
         
     free_image(filt);
     free(filt);
@@ -125,9 +125,9 @@ Image *MS_Filter(Image* img, int h_spatial, double h_range, int initIters)
             // get the vector
             int ic = i;
             int jc = j;
-            float L = GetPixel(luv, i, j)[0];
-            float U = GetPixel(luv, i, j)[1];
-            float V = GetPixel(luv, i, j)[2];
+            float L = get_pixel(luv, i, j)[0];
+            float U = get_pixel(luv, i, j)[1];
+            float V = get_pixel(luv, i, j)[2];
 
             double ms_shift = 5; // initial value of mean shift
 
@@ -150,9 +150,9 @@ Image *MS_Filter(Image* img, int h_spatial, double h_range, int initIters)
                     for (int ii = ifrom; ii < ito; ii++)
                     {
                         // get the second the values of the colours within the window
-                        float L2 = GetPixel(luv, ii, jj)[0];
-                        float U2 = GetPixel(luv, ii, jj)[1];
-                        float V2 = GetPixel(luv, ii, jj)[2];
+                        float L2 = get_pixel(luv, ii, jj)[0];
+                        float U2 = get_pixel(luv, ii, jj)[1];
+                        float V2 = get_pixel(luv, ii, jj)[2];
 
                         double dL = L2 - L;
                         double dU = U2 - U;
@@ -194,9 +194,9 @@ Image *MS_Filter(Image* img, int h_spatial, double h_range, int initIters)
                 ms_shift = di * di + dj * dj + dL * dL + dU * dU + dV * dV;
             }
             // Set pixel L, U and v values
-            SetPixel(result, i, j, (uchar)L, 1); // L
-            SetPixel(result, i, j, (uchar)U, 2); // u
-            SetPixel(result, i, j, (uchar)V, 3); // v
+            set_pixel(result, i, j, (uchar)L, 1); // L
+            set_pixel(result, i, j, (uchar)U, 2); // u
+            set_pixel(result, i, j, (uchar)V, 3); // v
         }
     free_image(luv);
     free(luv);
@@ -271,9 +271,9 @@ int MS_Cluster(Image* img, int** labels, int* modePoints, float* mode, double h_
             {
                 labels[j][i] = ++lbl;
 
-                float L = GetPixel(img, i, j)[0];  // L
-                float U = GetPixel(img, i, j)[1];  // u
-                float V = GetPixel(img, i, j)[2];  // v
+                float L = get_pixel(img, i, j)[0];  // L
+                float U = get_pixel(img, i, j)[1];  // u
+                float V = get_pixel(img, i, j)[2];  // v
 
                 // Convert 8-bit data to L*u*v range 0<=l<=100, −134<=u<=220, −140<=v<=122
                 mode[lbl * 3 + 0] = 100 * L / 255;
@@ -299,9 +299,9 @@ int MS_Cluster(Image* img, int** labels, int* modePoints, float* mode, double h_
                             AddToStack(stack, ii,  jj);
                             modePoints[lbl]++;
 
-                            float L = GetPixel(img, ii, jj)[0];  // L
-                            float U = GetPixel(img, ii, jj)[1];  // u
-                            float V = GetPixel(img, ii, jj)[2];  // v
+                            float L = get_pixel(img, ii, jj)[0];  // L
+                            float U = get_pixel(img, ii, jj)[1];  // u
+                            float V = get_pixel(img, ii, jj)[2];  // v
 
                             // Convert 8-bit data to L*u*v range 0<=l<=100, −134<=u<=220, −140<=v<=122
                             mode[lbl * 3 + 0] += 100 * L / 255;

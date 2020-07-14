@@ -47,15 +47,15 @@ void free_image(Image *img);
 
 // processing
 
-uchar *GetPixel(Image *img, int x, int y);
-void SetPixel(Image *img, int x, int y, const uchar val, int channel);
-int** GenerateLabels(size_t width, size_t height);
-void LabelImage(Image *res, int** labels, int regCount);
+uchar *get_pixel(Image *img, int x, int y);
+void set_pixel(Image *img, int x, int y, const uchar val, int channel);
+int** generate_labels(size_t width, size_t height);
+void label_image(Image *res, int** labels, int regCount);
 int range_distance(Image *img, int x1, int y1, int x2, int y2);
 Image *convertRGB2LUV(Image *input);
 Image *convertLUV2RGB(Image *origin);
 float color_distance(const float* a, const float* b);
-std::vector<int> GenerateRandomNumbers(int num);
+std::vector<int> get_random_numbers(int num);
 
 
 #endif /* IMAGE_H */
