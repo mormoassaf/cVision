@@ -14,7 +14,6 @@
 #include "lib/ms/ms.h"
 #include "lib/ra/RAList.h"
 #include "lib/ra/TransitiveClosure.h"
-
-typedef unsigned char *ImgData;
+#include "lib/stereo/stereo.h"
 
 #endif

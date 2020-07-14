@@ -10,7 +10,7 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "image.h"
+#include "image.hpp"
 #include <cstdlib>
 
 //STB  
@@ -20,10 +20,10 @@
 #include "stb_image_write.h"
 
 
-/* create image object which contains data*/
+/* Create image object which contains data*/
 Image *new_image()
 {
-    Image *img = (Image *)malloc(sizeof(Image));
+    Image *img = (Image*)malloc(sizeof(Image));
     ASSERT_EXIT((img != NULL), "Assertion failed: allocation for Image object failed!");
     img->width = 0;
     img->height = 0;
@@ -34,7 +34,30 @@ Image *new_image()
     return img;
 }
 
-/* load an image from extension to the image object*/
+/* Make an image data object*/
+ImageData *new_image_data(int width, int height, int nchannels, bool zeroed)
+{
+    ImageData  *img = (ImageData*)malloc(sizeof(ImageData));
+    img->size = width * height * nchannels;
+    img->data = (double*)malloc(sizeof(double) * img->size);
+    ASSERT_EXIT((img != NULL && img->data != NULL), double"Assertion failed: allocation for ImageData object failed!");
+    img->width = width;
+    img->height = height;
+    img->nchannels = nchannels;
+}
+
+/* Free the image data object including the pointer to the object itself */
+void free_image_data(ImageData* img)
+{
+    img->width = 0;
+    img->height = 0;
+    img->size = 0;
+    img->nchannels = 0;
+    free(img->data);
+    free(img);
+}
+
+/* Load an image from extension to the image object*/
 void load_image(Image *img, const char *fname)
 {
     if((img->data = stbi_load(fname, &(img->width), &(img->height), &(img->nchannels), STBI_rgb)) != NULL)
@@ -44,7 +67,7 @@ void load_image(Image *img, const char *fname)
     }
 }
 
-/* free the memory allocations inside the image object*/
+/* Free the memory allocations inside the image object*/
 void free_image(Image *img)
 {
     if (img->allocation_ != NO_ALLOCATION && img != NULL && img->data != NULL)
@@ -65,7 +88,7 @@ void free_image(Image *img)
     }
 }
 
-/* allocate an image array inside the image array */
+/* Allocate an image array inside the image array */
 void create_image(Image *img, int width, int height, int nchannels, bool zeroed)
 {
     if (img == NULL)
@@ -92,7 +115,7 @@ void create_image(Image *img, int width, int height, int nchannels, bool zeroed)
     img->size = size;
 }
 
-// save the image to the extension fname
+// Save the image to the extension fname
 void save_image(const Image *img, const char *fname)
 {
     if (str_end_with(fname, ".jpg") || str_end_with(fname, ".JPG") || str_end_with(fname, ".jpeg") || str_end_with(fname, ".JPEG"))
@@ -352,34 +375,23 @@ Image *convertLUV2RGB(Image* origin)
     return rgb;
 }
 
-/*! \brief Set Pixel at channel component of image at postition given with x and y
-*
-*  \param im image to convert
-*  \param width width of the image
-*  \param height height of the image
-*  \param x x position in the image
-*  \param y y position in the image
-*  \param val value to set at pixel location
-*  \param nchannel number of image channels
-*/
+/* set pixel to value at position (x, y) */
 void set_pixel(Image *img, int x, int y, const uchar val, int nchannel)
 {
     uchar* offset = img->data + (x + y * img->width) * (sizeof(uchar) * img->nchannels);
     offset[nchannel - 1] = val;
 }
 
-/*! \brief Get Pixel at channel component of image at postition given with x and y
-*  \param im image to convert
-*  \param width width of the image
-*  \param height height of the image
-*  \param x x position in the image   0 < x < width
-*  \param y y position in the image   0 < y < height
-*  \param nchannel number of image channels
-*  \return pixel value
-*/
+/* get pixel pointer at position (x, y) */
 uchar *get_pixel(Image *img, int x, int y)
 {
     uchar* offset = img->data + (x + y * img->width) * (sizeof(uchar) * img->nchannels);
+    return offset;
+}
+
+double *get_pixel(ImageData* img, int x, int y)
+{
+    double *offset = img->data + (x + y * img->width) * (sizeof(double) * img->nchannels);
     return offset;
 }
 
