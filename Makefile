@@ -1,4 +1,4 @@
-FILES = lib/image/* lib/utils.h lib/ms/* lib/ra/*
+FILES = lib/image/* lib/utils.h lib/ms/* lib/ra/* lib/stereo/*
 MAIN = main.cpp
 
 all:

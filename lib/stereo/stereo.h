@@ -34,8 +34,8 @@ typedef struct
 typedef struct
 {
 	Image *left, *right; //left and right images
-	Window lw, rw;
-	ImageData* dsp; // disparities
+	Window *lw, *rw;
+	ImageData *dsp; // disparities
 	double f; // focal length
 	double d; // baseline length
 	double max_z;
@@ -47,9 +47,10 @@ Stereo *new_stereo(double focal_length, double baseline);
 void free_stereo(Stereo *st);
 void set_images(Stereo *st, Image *left, Image *right);
 void match(Stereo *st, int h_spacial, int d_max);
-Image get_result_img(Stereo *st);
+Image *get_result_img(Stereo *st);
 double cost(Stereo *st);
 
+// Windows
+Window *new_window();
 
-
-#endif
+#endif /*STEREO_H*/

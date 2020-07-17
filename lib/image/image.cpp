@@ -24,7 +24,7 @@
 Image *new_image()
 {
     Image *img = (Image*)malloc(sizeof(Image));
-    ASSERT_EXIT((img != NULL), "Assertion failed: allocation for Image object failed!");
+    ASSERT_EXIT((img != NULL), "cVision/image: allocation for Image object failed!");
     img->width = 0;
     img->height = 0;
     img->allocation_ = NO_ALLOCATION;
@@ -39,11 +39,19 @@ ImageData *new_image_data(int width, int height, int nchannels, bool zeroed)
 {
     ImageData  *img = (ImageData*)malloc(sizeof(ImageData));
     img->size = width * height * nchannels;
-    img->data = (double*)malloc(sizeof(double) * img->size);
-    ASSERT_EXIT((img != NULL && img->data != NULL), double"Assertion failed: allocation for ImageData object failed!");
+    if (zeroed)
+    {
+        img->data = (double *)calloc(img->size, sizeof(double));
+    }
+    else
+    {
+        img->data = (double *)malloc(sizeof(double) * img->size);
+    }
+    ASSERT_EXIT((img != NULL && img->data != NULL), "cVision/image: allocation for ImageData object failed!");
     img->width = width;
     img->height = height;
     img->nchannels = nchannels;
+    return img;
 }
 
 /* Free the image data object including the pointer to the object itself */
@@ -375,23 +383,24 @@ Image *convertLUV2RGB(Image* origin)
     return rgb;
 }
 
-/* set pixel to value at position (x, y) */
+/* set pixel to value at position (x, y) in (width, height)*/
 void set_pixel(Image *img, int x, int y, const uchar val, int nchannel)
 {
-    uchar* offset = img->data + (x + y * img->width) * (sizeof(uchar) * img->nchannels);
+    uchar* offset = img->data + (x + y * img->width) * (img->nchannels);
     offset[nchannel - 1] = val;
 }
 
-/* get pixel pointer at position (x, y) */
+/* get pixel at position (x, y) in (width, height)*/
 uchar *get_pixel(Image *img, int x, int y)
 {
-    uchar* offset = img->data + (x + y * img->width) * (sizeof(uchar) * img->nchannels);
+    uchar *offset = img->data + (x + y * img->width) * (img->nchannels);
     return offset;
 }
 
-double *get_pixel(ImageData* img, int x, int y)
+/* get pixel at position (x, y) in (width, height)*/
+double *get_pixel(ImageData *img, int x, int y)
 {
-    double *offset = img->data + (x + y * img->width) * (sizeof(double) * img->nchannels);
+    double *offset = img->data + (x + y * img->width) * (img->nchannels);
     return offset;
 }
 

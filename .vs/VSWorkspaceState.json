@@ -1,8 +1,12 @@
 {
   "ExpandedNodes": [
     "",
-    "\\lib"
+    "\\lib",
+    "\\lib\\image",
+    "\\lib\\ms",
+    "\\lib\\ra",
+    "\\lib\\stereo"
   ],
-  "SelectedNode": "\\lib\\ms",
+  "SelectedNode": "\\lib\\stereo\\stereo.cpp",
   "PreviewInSolutionExplorer": false
 }

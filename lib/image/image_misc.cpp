@@ -1,7 +1,7 @@
 #include "image.hpp"
 
 // gets the appropriate colour for x in[0, 1]
-void get_colour(double x, uchar *R, uchar *G, uchar *B) :
+void get_colour(double x, uchar *R, uchar *G, uchar *B)
 {
 	if (x < 0)
 	{
@@ -23,5 +23,5 @@ void get_colour(double x, uchar *R, uchar *G, uchar *B) :
 	*G = 255 * (acc > 0 ? acc : 0);
 
 	acc = -abs(T * x + b) + 1.0;
-	*B = 255 * (acc > 0 ? acc : 0));
+	*B = 255 * (acc > 0 ? acc : 0);
 }

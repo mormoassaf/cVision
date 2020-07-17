@@ -2,20 +2,32 @@
 
 int main(int argc, char const *argv[])
 {
-    Image *myImg = new_image();
-    load_image(myImg, "samples/bpack0.png");
+    Image *left = new_image();
+    Image *right = new_image();
 
-    Image *result = MS_Filter(myImg, 10, 16, 5);
-    Image *rgb = convertLUV2RGB(result);
+    load_image(left, "samples/cone0.png");
+    load_image(right, "samples/cone1.png");
 
-    save_image(rgb, "rgb_3.png");
+    // stereo session
+    printf("Starting stereo...\n");
+    Stereo *st = new_stereo(10, 10);
+    printf("Setting images...\n");
+    set_images(st, left, right);
+    printf("Matching...\n");
+    match(st, 4, 100);
+    printf("Getting result...\n");
+    Image *result = get_result_img(st);
+    printf("Freeing stereo...\n");
+    free_stereo(st);
+    printf("Saving result...\n");
+    save_image(result, "stereo.png");
 
     // free stuff
-    free_image(myImg);
+    free_image(left);
+    free_image(right);
     free_image(result);
-    free_image(rgb);
     free(result);
-    free(myImg);
-    free(rgb);
+    free(left);
+    free(right);
     return 0;
 }

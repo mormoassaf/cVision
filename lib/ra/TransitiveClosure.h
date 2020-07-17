@@ -38,7 +38,7 @@ Implemented by Chris M. Christoudias, Bogdan Georgescu
 
 #include <string.h>
 #include "RAList.h"
-#include "../image/image.h"
+#include "../image/image.hpp"
 
 void TransitiveClosure(int width, int height, int **labels, int* modePointCounts, float *mode,double color_radius,int oldRegionCount,int minRegion);
 

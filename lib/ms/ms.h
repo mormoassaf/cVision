@@ -17,7 +17,7 @@
 #include <iostream>
 #include <cmath>
 #include <string.h>
-#include "../image/image.h"
+#include "../image/image.hpp"
 
 
 using namespace std;
