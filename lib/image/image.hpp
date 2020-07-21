@@ -57,6 +57,7 @@ typedef struct
 Image *new_image();
 void load_image(Image *img, const char *fname);
 void create_image(Image *img, int width, int height, int nchannels, bool zeroed);
+Image *resize_image(Image *img, int new_width, int new_height);
 void save_image(const Image *img, const char *fname);
 void free_image(Image *img);
 

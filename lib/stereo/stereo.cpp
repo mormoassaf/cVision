@@ -1,6 +1,19 @@
+/*  ________________________________________________  *
+ * |                                                | *
+ * |       / University of Groningen        \       | *
+ * |       \ Moe Assaf                      /       | *
+ * |       / cVision                        \       | *
+ * |       \ Monday the 6th of July, 2020   /       | *
+ * |________________________________________________| *
+ *                                                   */
+
 #include "stereo.h"
 #include "../image/image.hpp"
 #include "../utils.h"
+
+//// CUDA
+//#include "cuda_runtime.h"
+//#include "device_launch_parameters.h"
 
 // New stereo object
 Stereo *new_stereo(double focal_length, double baseline)
@@ -63,40 +76,46 @@ void set_images(Stereo *st, Image *left, Image *right)
 	}
 }
 
+// Match a row from the at row j in height
+void match_row(Stereo *st, int d_max, int j)
+{
+	double c, min_cost;
+	int disparity = 0;
+	// Place the windows on the row
+	st->lw->j = j;
+	st->rw->j = j;
+	for (int i = 0; i < st->dsp->width; i++)
+	{
+		st->lw->i = i;
+		min_cost = INT_MAX;
+		// Find best match
+		int d = max(i - d_max, 0);
+		d = max(d, 0);
+		d = min(d, st->dsp->width - 1);
+		for (; d <= i; d++)
+		{
+			st->rw->i = d;
+			c = cost(st);
+			if (c < min_cost)
+			{
+				min_cost = c;
+				disparity = abs(i - d);
+			}
+		}
+		get_pixel(st->dsp, i, j)[0] = disparity;
+		st->max_dsp = max(st->max_dsp, disparity);
+	}
+}
+
 // Match the images before producing the final output
 void match(Stereo *st, int h_spacial, int d_max)
 {
 	ASSERT_EXIT((st->left != NULL && st->right != NULL), "cVision/stereo: cannot compare NULL images!");
 	st->lw->m = h_spacial;
 	st->rw->m = h_spacial;
-	double c, min_cost;
-	int disparity = 0;
-
-	for (int i = 0; i < st->dsp->width; i++)
+	for (int j = 0; j < st->dsp->height; j++)
 	{
-		for (int j = 0; j < st->dsp->height; j++)
-		{
-			st->lw->i = i;
-			st->lw->j = j;
-			min_cost = INT_MAX;
-			// find best match
-			int d = max(i - d_max, 0);
-			d = max(d, 0);
-			d = min(d, st->dsp->width - 1);
-			for (; d <= i; d++)
-			{
-				st->rw->i = d;
-				st->rw->j = j;
-				c = cost(st);
-				if (c < min_cost)
-				{
-					min_cost = c;
-					disparity = abs(i - d);
-				}
-			}
-			get_pixel(st->dsp, i, j)[0] = disparity;
-			st->max_dsp = max(st->max_dsp, disparity);
-		}
+		match_row(st, d_max, j);
 	}
 }
 

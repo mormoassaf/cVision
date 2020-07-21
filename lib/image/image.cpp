@@ -18,6 +18,8 @@
 #include "stb_image.h"
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
+#define STB_IMAGE_RESIZE_IMPLEMENTATION
+#include "stb_image_resize.h"
 
 
 /* Create image object which contains data*/
@@ -138,6 +140,32 @@ void save_image(const Image *img, const char *fname)
     {
         ASSERT_EXIT(false, "wrong/no provided extension!");
     }
+}
+
+// Resize the image
+Image *resize_image(Image *img, int new_width, int new_height)
+{
+    Image *resized = new_image();
+    create_image(resized, new_width, new_height, img->nchannels, false);
+
+    int ti, tj;
+    uchar *p_resized;
+    uchar *p_img;
+    for (int i = 0; i < new_width; i++)
+    {
+        for (int j = 0; j < new_height; j++)
+        {
+            ti =   (int)((  (((double)i) / ((double)new_width))  ) * (double)img->width);
+            tj =   (int)((  (((double)j) / ((double)new_height))  ) * (double)img->height);
+            p_resized = get_pixel(resized, i, j);
+            p_img = get_pixel(img, ti, tj);
+            for (int n = 0; n < img->nchannels; n++)
+            {
+                p_resized[n] = p_img[n];
+            }
+        }
+    }
+    return resized;
 }
 
 //==============================================================================================================================================
@@ -390,37 +418,32 @@ void set_pixel(Image *img, int x, int y, const uchar val, int nchannel)
     offset[nchannel - 1] = val;
 }
 
-/* get pixel at position (x, y) in (width, height)*/
+/* Get pixel at position (x, y) in (width, height)*/
 uchar *get_pixel(Image *img, int x, int y)
 {
     uchar *offset = img->data + (x + y * img->width) * (img->nchannels);
     return offset;
 }
 
-/* get pixel at position (x, y) in (width, height)*/
+/* Get pixel at position (x, y) in (width, height)*/
 double *get_pixel(ImageData *img, int x, int y)
 {
     double *offset = img->data + (x + y * img->width) * (img->nchannels);
     return offset;
 }
 
-/*! \brief Function range_distance calculate range distance between two pixels
-*  \param image image to calculate
-*  \param width width of the image
-*  \param height height of the image
-*  \param x1 first x position in the image
-*  \param y1 first y position in the image
-*  \param x2 second x position in the image
-*  \param y2 second y position in the image
-*  \return squared sum of distances
-*/
-int range_distance(Image *img, int x1, int y1, int x2, int y2 )
+/* Get the distance squared between two points on the image*/
+int range_distance(Image *img, int x1, int y1, int x2, int y2)
 {
-    int r = get_pixel(img, x1, y1)[0] - get_pixel(img, x2, y2)[0];
-    int g = get_pixel(img, x1, y1)[1] - get_pixel(img, x2, y2)[1];
-    int b = get_pixel(img, x1, y1)[2] - get_pixel(img, x2, y2)[2];
-
-    return r * r + g * g + b * b;
+    uchar *p1 = get_pixel(img, x1, y1);
+    uchar *p2 = get_pixel(img, x2, y2);
+    int norm_s, d;
+    for (int n = 0; n < img->nchannels; n++)
+    {
+        d = p1[n] - p2[n];
+        norm_s += d * d;
+    }
+    return norm_s;
 }
 
 /*! \brief Function color_distance calculate color distance between the two vectors
@@ -428,7 +451,7 @@ int range_distance(Image *img, int x1, int y1, int x2, int y2 )
 *  \param a, b input images
 *  \return the color distance
 */
-float color_distance( const float* a, const float* b)
+float color_distance(const float* a, const float* b)
 {
     float x = a[0] - b[0], y=a[1] - b[1], z = a[2] - b[2];
     return x * x + y * y + z * z;

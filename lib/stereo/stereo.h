@@ -50,6 +50,9 @@ void match(Stereo *st, int h_spacial, int d_max);
 Image *get_result_img(Stereo *st);
 double cost(Stereo *st);
 
+// Background methods
+void match_row(Stereo *st, int d_max, int j);
+
 // Windows
 Window *new_window();
 
